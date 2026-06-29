@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简答题刷题</title>
+<style>
+:root{--bg:#f0f2f5;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--t2:#666;--t3:#999;--accent:#4f46e5;--accent-h:#4338ca;--green:#16a34a;--green-l:#dcfce7;--red:#dc2626;--red-l:#fef2f2;--amber:#d97706;--amber-l:#fef3c7;--r:12px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.app{max-width:720px;margin:0 auto;padding:16px}
+header{text-align:center;padding:20px 0 8px}
+header h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+header p{font-size:13px;color:var(--t3);margin-top:2px}
+
+/* Subject bar */
+.subj-bar{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:var(--r);padding:6px 10px;margin-bottom:12px;box-shadow:var(--shadow)}
+.subj-bar select{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;background:var(--bg);cursor:pointer;outline:none;color:var(--text);min-width:0}
+.subj-bar select:focus{border-color:var(--accent)}
+.subj-bar .btn-sm{padding:7px 12px;font-size:12px;white-space:nowrap}
+.subj-all-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;background:var(--accent-l);color:var(--accent);white-space:nowrap}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--card);border-radius:var(--r);padding:4px;margin-bottom:16px;box-shadow:var(--shadow)}
+.tab{flex:1;padding:10px;border:none;border-radius:10px;background:none;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;color:var(--t2);transition:all .15s}
+.tab.active{background:var(--accent);color:#fff}
+.tab:not(.active):hover{background:var(--bg)}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* Stats row */
+.stats{display:flex;gap:8px;margin-bottom:12px}
+.stat{flex:1;text-align:center;padding:12px 8px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow)}
+.stat-val{font-size:22px;font-weight:700;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--accent);color:#fff;width:100%}
+.btn-p:hover{background:var(--accent-h)}
+.btn-p:disabled{background:#c4c7cc;cursor:not-allowed}
+.btn-s{background:var(--card);border:1px solid var(--border);color:var(--text)}
+.btn-s:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-xs{padding:4px 10px;font-size:11px}
+
+/* Textarea */
+textarea{width:100%;min-height:140px;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;font-family:inherit;line-height:1.8;resize:vertical;outline:none;background:var(--bg)}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+textarea::placeholder{color:var(--t3)}
+
+/* API key input */
+.api-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.api-row input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+.api-row input:focus{border-color:var(--accent)}
+.api-label{font-size:12px;font-weight:600;color:var(--t2);white-space:nowrap}
+
+/* Generated questions list */
+.q-list{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;margin:12px 0}
+.q-item{border:1px solid var(--border);border-radius:8px;padding:12px;transition:all .12s}
+.q-item:hover{border-color:var(--accent)}
+.q-item-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.q-item-q{font-size:14px;font-weight:600;flex:1}
+.q-item-a{font-size:13px;color:var(--t2);line-height:1.7;padding:8px 10px;background:var(--bg);border-radius:6px;margin-top:6px;white-space:pre-wrap}
+.q-item-actions{display:flex;gap:4px;flex-shrink:0}
+.q-item-actions button{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--t3)}
+.q-item-actions button:hover{border-color:var(--red);color:var(--red)}
+.q-item input[type=text],.q-item textarea{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none;margin-top:4px}
+.q-item textarea{min-height:60px}
+.q-item input:focus,.q-item textarea:focus{border-color:var(--accent)}
+
+/* Practice card */
+.practice-card{background:var(--card);border-radius:var(--r);padding:28px 24px;min-height:280px;box-shadow:var(--shadow);cursor:pointer;user-select:none;position:relative;transition:all .3s}
+.practice-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.practice-card .pc-question{font-size:17px;line-height:2;font-weight:600;text-align:center;padding:40px 20px}
+.practice-card .pc-answer{font-size:15px;line-height:2;padding:20px;margin-top:8px;background:var(--amber-l);border-radius:8px;border-left:3px solid var(--amber);display:none;white-space:pre-wrap}
+.practice-card.show-answer .pc-answer{display:block}
+.practice-card .pc-hint{font-size:12px;color:var(--t3);text-align:center;margin-top:12px}
+.practice-card.show-answer .pc-hint{display:none}
+.practice-card .pc-idx{font-size:12px;color:var(--t3);text-align:center;margin-bottom:8px}
+
+/* Self-eval buttons */
+.eval-row{display:flex;gap:8px;margin-top:14px}
+.eval-btn{flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .12s}
+.eval-btn:active{transform:scale(.97)}
+.eval-btn.forgot:hover{border-color:var(--red);background:var(--red-l);color:var(--red)}
+.eval-btn.partial:hover{border-color:var(--amber);background:var(--amber-l);color:var(--amber)}
+.eval-btn.correct:hover{border-color:var(--green);background:var(--green-l);color:var(--green)}
+
+/* Nav */
+.nav-row{display:flex;gap:10px;margin-top:14px}
+.nav-row .btn{flex:1}
+
+/* Mode buttons */
+.mode-btns{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.mode-btns .btn{flex:1;min-width:0}
+.mode-btns .btn.active{background:var(--accent-l);color:var(--accent);border-color:var(--accent)}
+
+/* Hint */
+.hint-box{margin-top:10px;padding:10px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:13px;color:#0369a1;line-height:1.8;display:none}
+.hint-box .hint-label{font-weight:700;margin-bottom:4px}
+.hint-row{display:flex;gap:8px;margin-top:10px}
+
+/* Difficulty tags & selectors */
+.diff-tag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;margin-left:6px;vertical-align:middle}
+.diff-easy{background:#dcfce7;color:#16a34a}
+.diff-medium{background:#fef3c7;color:#d97706}
+.diff-hard{background:#fef2f2;color:#dc2626}
+.diff-btn{flex:1;padding:8px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;transition:all .12s;text-align:center}
+.diff-btn:active{transform:scale(.97)}
+.diff-btn:hover{border-color:var(--accent)}
+.diff-btn.active.easy{background:#dcfce7;border-color:#16a34a;color:#16a34a}
+.diff-btn.active.medium{background:#fef3c7;border-color:#d97706;color:#d97706}
+.diff-btn.active.hard{background:#fef2f2;border-color:#dc2626;color:#dc2626}
+.diff-btn.active.mixed{background:var(--accent-l);border-color:var(--accent);color:var(--accent)}
+
+/* Empty state */
+.empty{text-align:center;padding:48px 20px;color:var(--t3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty p{font-size:13px;line-height:1.8}
+
+/* Toast */
+.toast{position:fixed;top:16px;right:16px;z-index:999;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;animation:slideIn .25s ease;max-width:280px;background:#1a1a1a;color:#fff}
+.toast.ok{background:var(--green)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Loading */
+.loading{display:flex;align-items:center;gap:8px;padding:12px 0;color:var(--t2);font-size:13px}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Setting hint */
+.hint{font-size:11px;color:var(--t3);margin-top:6px;line-height:1.6}
+.hint a{color:var(--accent)}
+
+@media(max-width:640px){
+  .app{padding:10px}
+  .practice-card{padding:20px 16px;min-height:220px}
+  .practice-card .pc-question{font-size:15px;padding:24px 10px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>📝 简答题刷题</h1>
+  <p>AI 生成 · 卡片背诵 · 自我评估</p>
+</header>
+
+<div class="subj-bar" id="subjBar">
+  <select id="subjSelect" onchange="switchSubject(this.value)">
+    <option value="">📋 全部科目</option>
+  </select>
+  <button class="btn btn-s btn-sm" onclick="addSubject()">➕ 新建</button>
+</div>
+
+<div class="tabs" id="tabBar">
+  <button class="tab active" data-tab="generate">🤖 生成题目</button>
+  <button class="tab" data-tab="practice">📖 练习</button>
+</div>
+
+<!-- ========== 生成面板 ========== -->
+<div id="panelGenerate">
+  <div class="card">
+    <div class="card-title">🔑 API 设置</div>
+    <div class="api-row">
+      <span class="api-label">Key</span>
+      <input type="password" id="apiKey" placeholder="sk-... DeepSeek API Key">
+      <span class="api-label">模型</span>
+      <input type="text" id="apiModel" value="deepseek-chat" style="width:130px">
+    </div>
+    <p class="hint">使用 <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek API</a>（¥1/百万token，极便宜）。Key 仅存本地浏览器。</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📄 粘贴复习资料 <span id="genSubjTag" style="font-size:11px;color:var(--accent);font-weight:400"></span></div>
+    <textarea id="sourceText" placeholder="把笔记、教材内容、复习提纲粘贴到这里...&#10;&#10;AI 会自动从中提炼简答题。"></textarea>
+    <div style="margin-top:8px;font-size:11px;color:var(--t3)">也支持上传 TXT / MD / DOCX 文件</div>
+    <input type="file" id="fileInput" accept=".txt,.md,.docx" style="display:none" onchange="handleFile(this)">
+    <button class="btn btn-s btn-sm" style="margin-top:6px" onclick="document.getElementById('fileInput').click()">📎 上传文件</button>
+    <div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--t2)">🎯 题目难度</div>
+    <div class="mode-btns" id="diffSelector" style="margin-top:6px">
+      <button class="diff-btn active easy" data-diff="easy" onclick="setDifficulty('easy')">🟢 简单<br><span style="font-size:10px;font-weight:400">名词解释</span></button>
+      <button class="diff-btn medium" data-diff="medium" onclick="setDifficulty('medium')">🟡 中等<br><span style="font-size:10px;font-weight:400">简答题</span></button>
+      <button class="diff-btn hard" data-diff="hard" onclick="setDifficulty('hard')">🔴 困难<br><span style="font-size:10px;font-weight:400">论述题</span></button>
+      <button class="diff-btn mixed" data-diff="mixed" onclick="setDifficulty('mixed')">🎲 综合<br><span style="font-size:10px;font-weight:400">20/50/30</span></button>
+    </div>
+    <button class="btn btn-p" style="margin-top:12px" id="btnGenerate" onclick="generateQA()">✨ AI 生成简答题</button>
+  </div>
+
+  <div id="generateResult" style="display:none">
+    <div class="card">
+      <div class="card-title">📋 生成的题目（可编辑、删除，⚠️ 请对照原文核对答案准确性）</div>
+      <div class="q-list" id="qList"></div>
+      <button class="btn btn-p" onclick="saveToBank()">✅ 确认存入题库</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 练习面板 ========== -->
+<div id="panelPractice" style="display:none">
+  <div style="text-align:center;font-size:12px;color:var(--t2);margin-bottom:8px;font-weight:600" id="practiceSubjLabel"></div>
+  <div id="practiceStats" class="stats">
+    <div class="stat"><div class="stat-val" id="statNew">0</div><div class="stat-lbl">新题</div></div>
+    <div class="stat"><div class="stat-val" id="statForgot">0</div><div class="stat-lbl" style="color:var(--red)">记忆不牢</div></div>
+    <div class="stat"><div class="stat-val" id="statMastered">0</div><div class="stat-lbl">已掌握</div></div>
+  </div>
+
+  <div class="mode-btns">
+    <button class="btn btn-s btn-sm active" data-mode="new" onclick="setMode('new')">🆕 新题</button>
+    <button class="btn btn-s btn-sm" data-mode="forgot" onclick="setMode('forgot')">🔴 记忆不牢</button>
+  </div>
+  <div class="mode-btns" id="diffFilter" style="display:none;margin-bottom:12px">
+    <button class="diff-btn active" data-fdiff="all" onclick="setDiffFilter('all')">全部</button>
+    <button class="diff-btn easy" data-fdiff="easy" onclick="setDiffFilter('easy')">🟢 简单</button>
+    <button class="diff-btn medium" data-fdiff="medium" onclick="setDiffFilter('medium')">🟡 中等</button>
+    <button class="diff-btn hard" data-fdiff="hard" onclick="setDiffFilter('hard')">🔴 困难</button>
+  </div>
+
+  <div id="practiceCard">
+    <div class="empty"><div class="empty-icon">📭</div><p>题库为空<br>先去"生成题目"导入一些吧</p></div>
+  </div>
+
+  <div id="practiceArea" style="display:none">
+    <div class="practice-card" id="flipCard" onclick="flipCard()">
+      <div class="pc-idx" id="cardIdx">1 / 1</div>
+      <div class="pc-question" id="cardQuestion"></div>
+      <div class="pc-answer" id="cardAnswer"></div>
+      <div class="pc-hint">👆 点击卡片翻转查看答案</div>
+    </div>
+
+    <div class="hint-box" id="hintBox"><div class="hint-label">💡 关键词提示</div><div id="hintContent"></div></div>
+    <div class="hint-row" id="hintRow" style="display:none">
+      <button class="btn btn-s btn-sm" onclick="showHint()">💡 看提示（将标记为记忆不牢）</button>
+    </div>
+    <div class="eval-row" id="evalRow" style="display:none">
+      <button class="eval-btn forgot" onclick="selfEval('forgot')">😰 忘了</button>
+      <button class="eval-btn partial" onclick="selfEval('partial')">🤔 部分对</button>
+      <button class="eval-btn correct" onclick="selfEval('correct')">✅ 全对</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-s" onclick="prevCard()">⬅ 上一题</button>
+      <button class="btn btn-s" onclick="nextCard()">下一题 ➡</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastArea" class="toast" style="position:fixed;top:16px;right:16px;z-index:999;display:none"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script>
+// ========== State ==========
+let bank = JSON.parse(localStorage.getItem('sa_bank') || '[]');
+let subjects = JSON.parse(localStorage.getItem('sa_subjects') || '[]');
+let currentSubjectId = localStorage.getItem('sa_currentSubject') || ''; // '' = all
+let currentMode = 'new';
+let currentDifficulty = 'easy';
+let currentDiffFilter = 'all'; // 'all' | 'easy' | 'medium' | 'hard'
+let currentQueue = [];
+let currentIdx = 0;
+let cardFlipped = false;
+
+let apiKey = localStorage.getItem('sa_apikey') || '';
+let apiModel = localStorage.getItem('sa_model') || 'deepseek-chat';
+
+document.getElementById('apiKey').value = apiKey;
+document.getElementById('apiModel').value = apiModel;
+
+// ========== Subject management ==========
+// Migrate old data: ensure at least one subject exists, old questions get default
+(function migrateData() {
+  if (subjects.length === 0) {
+    subjects = [{ id: 'subj_default', name: '默认科目', createdAt: Date.now() }];
+    saveSubjects();
+  }
+  // If no currentSubject is set, default to the first subject
+  if (!currentSubjectId && subjects.length > 0) {
+    currentSubjectId = subjects[0].id;
+    localStorage.setItem('sa_currentSubject', currentSubjectId);
+  }
+  // Migrate old questions without subjectId or difficulty
+  let dirty = false;
+  bank.forEach(q => {
+    if (!q.subjectId) { q.subjectId = currentSubjectId || subjects[0].id; dirty = true; }
+    if (!q.difficulty) { q.difficulty = 'medium'; dirty = true; }
+  });
+  if (dirty) saveBank();
+})();
+
+function saveSubjects() { localStorage.setItem('sa_subjects', JSON.stringify(subjects)); }
+function saveSubjectId() { localStorage.setItem('sa_currentSubject', currentSubjectId || ''); }
+
+function renderSubjectBar() {
+  const sel = document.getElementById('subjSelect');
+  sel.innerHTML = '<option value="">📋 全部科目</option>';
+  subjects.forEach(s => {
+    sel.innerHTML += `<option value="${s.id}" ${s.id === currentSubjectId ? 'selected' : ''}>📚 ${escHtml(s.name)}</option>`;
+  });
+}
+
+function switchSubject(id) {
+  currentSubjectId = id || '';
+  saveSubjectId();
+  updateSubjTag();
+  if (document.getElementById('panelPractice').style.display !== 'none') refreshPractice();
+}
+
+function updateSubjTag() {
+  const tag = document.getElementById('genSubjTag');
+  if (!tag) return;
+  const s = subjects.find(s => s.id === currentSubjectId);
+  tag.textContent = s ? `→ 将为「${s.name}」生成题目` : '→ 将为「全部科目」生成题目';
+}
+updateSubjTag();
+
+function addSubject() {
+  const name = prompt('请输入科目名称：');
+  if (!name || !name.trim()) return;
+  const id = 'subj_' + Date.now();
+  subjects.push({ id, name: name.trim(), createdAt: Date.now() });
+  saveSubjects();
+  currentSubjectId = id;
+  saveSubjectId();
+  renderSubjectBar();
+  toast('已创建科目：' + name, 'ok');
+}
+
+renderSubjectBar();
+
+// ========== Tabs ==========
+document.getElementById('tabBar').addEventListener('click', e => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+  const t = e.target.dataset.tab;
+  document.getElementById('panelGenerate').style.display = t === 'generate' ? '' : 'none';
+  document.getElementById('panelPractice').style.display = t === 'practice' ? '' : 'none';
+  if (t === 'practice') refreshPractice();
+});
+
+// ========== Toast ==========
+function toast(msg, type) {
+  const el = document.getElementById('toastArea');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || '');
+  el.style.display = 'block';
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'slideIn .25s ease';
+  setTimeout(() => el.style.display = 'none', 2000);
+}
+
+// ========== File Import ==========
+async function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  let text = '';
+  if (file.name.endsWith('.docx')) {
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    text = result.value;
+  } else {
+    text = await file.text();
+  }
+  document.getElementById('sourceText').value = text;
+  toast('已加载：' + file.name, 'ok');
+}
+
+// ========== AI Generation ==========
+document.getElementById('apiKey').addEventListener('change', function() {
+  apiKey = this.value;
+  localStorage.setItem('sa_apikey', apiKey);
+});
+document.getElementById('apiModel').addEventListener('change', function() {
+  apiModel = this.value;
+  localStorage.setItem('sa_model', apiModel);
+});
+
+async function generateQA() {
+  const text = document.getElementById('sourceText').value.trim();
+  if (!text) { toast('请先粘贴复习资料', 'err'); return; }
+  if (!apiKey) { toast('请先填写 API Key', 'err'); return; }
+  if (!currentSubjectId) { toast('请先在顶部选择一个科目', 'err'); return; }
+
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  btn.textContent = '⏳ AI 生成中...';
+
+  const subjectName = subjects.find(s => s.id === currentSubjectId);
+  const subjectHint = subjectName ? `\n当前科目：${subjectName.name}。请围绕该科目核心知识点出题。` : '';
+
+  const diffConfig = {
+    easy: {
+      label: '简单（名词解释）',
+      prompt: `出题类型：**名词解释**。每道题要求解释一个核心概念的定义。
+要求：
+1. 精准提取概念的定义，50-100字
+2. 每个重要概念都应覆盖
+3. 题目形式："请解释什么是XXX"
+4. 题量根据资料中核心概念数量决定，通常10-20道`,
+      maxTokens: 4096
+    },
+    medium: {
+      label: '中等（简答题）',
+      prompt: `出题类型：**简答题**。按以下比例出题：
+- 40% 对比辨析：两个易混概念的异同
+- 30% 案例分析：给出现实场景，用资料中理论解释
+- 30% 概念简答：核心概念的定义与要点
+要求：
+1. 参考答案150-300字，包含关键论证
+2. 均匀覆盖各章节
+3. 题量10-25道`,
+      maxTokens: 4096
+    },
+    hard: {
+      label: '困难（论述题）',
+      prompt: `出题类型：**论述题**。要求综合运用多个知识点深入分析。
+按以下比例出题：
+- 40% 综合论述：需要串联多个章节的知识点
+- 30% 深度案例分析：用理论剖析复杂现实问题
+- 30% 批判性思考：评估理论的优缺点、适用范围
+要求：
+1. 答案300-800字，论证充分、逻辑严密
+2. **允许结合该学科公认的理论知识进行补充**（如该领域经典学者观点、学术共识）
+3. 可引入适当现实案例丰富论证
+4. 题量8-15道`,
+      maxTokens: 8192
+    },
+    mixed: {
+      label: '综合（混搭）',
+      prompt: `出题类型：**混合**。按 20% 名词解释 + 50% 简答题 + 30% 论述题 的比例出题。
+各项要求分别对应其难度级别的标准。
+题量12-25道。`,
+      maxTokens: 8192
+    }
+  };
+
+  const dc = diffConfig[currentDifficulty];
+  const prompt = `你是一个出题助教。请**严格根据以下复习资料**出题。${subjectHint}
+
+当前难度：${dc.label}
+
+${dc.prompt}
+
+核心规则：
+1. 题目和答案**优先来自原文**，困难/综合模式可用公认学科知识补充
+2. 均匀覆盖各个章节
+3. 输出纯 JSON 数组，格式：[{"q":"题目","a":"参考答案"}]
+4. 不要输出任何其他内容，只输出 JSON 数组。
+
+资料内容：
+${text.slice(0, 30000)}`;
+
+  const maxTokens = dc.maxTokens;
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: apiModel,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: maxTokens
+      })
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`API 错误 ${resp.status}: ${err.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    const content = data.choices[0].message.content;
+    // 解析 JSON（可能被包裹在 ```json ... ``` 中）
+    let json = content;
+    const m = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (m) json = m[1];
+    const qaList = JSON.parse(json);
+    if (!Array.isArray(qaList)) throw new Error('返回格式不是数组');
+
+    const diffLabel = { easy: '简单', medium: '中等', hard: '困难' }[currentDifficulty] || '综合';
+    const diffClass = { easy: 'diff-easy', medium: 'diff-medium', hard: 'diff-hard' }[currentDifficulty] || '';
+
+    // 显示生成结果
+    const container = document.getElementById('generateResult');
+    container.style.display = '';
+    const listEl = document.getElementById('qList');
+    listEl.innerHTML = qaList.map((item, i) => `
+      <div class="q-item" id="genItem${i}">
+        <div class="q-item-header">
+          <span class="q-item-q">${i + 1}.${diffClass ? `<span class="diff-tag ${diffClass}">${diffLabel}</span>` : ''} <input type="text" value="${escHtml(item.q)}" id="genQ${i}" style="width:100%"></span>
+          <div class="q-item-actions">
+            <button onclick="document.getElementById('genItem${i}').remove()" title="删除">✕</button>
+          </div>
+        </div>
+        <textarea id="genA${i}" placeholder="参考答案">${escHtml(item.a)}</textarea>
+      </div>
+    `).join('');
+    toast(`生成了 ${qaList.length} 道题`, 'ok');
+  } catch (e) {
+    toast('生成失败：' + e.message, 'err');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ AI 生成简答题';
+  }
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function saveToBank() {
+  const items = document.querySelectorAll('#qList .q-item');
+  const newQs = [];
+  const sid = currentSubjectId || (subjects.length > 0 ? subjects[0].id : 'subj_default');
+  items.forEach((item, i) => {
+    const qEl = item.querySelector('input[type=text]');
+    const aEl = item.querySelector('textarea');
+    if (!qEl || !aEl) return;
+    const q = qEl.value.trim();
+    const a = aEl.value.trim();
+    if (!q || !a) return;
+    newQs.push({ id: Date.now() + '_' + i, q, a, status: 'new', subjectId: sid, difficulty: currentDifficulty, addedAt: Date.now() });
+  });
+  if (newQs.length === 0) { toast('没有有效题目', 'err'); return; }
+  bank = [...bank, ...newQs];
+  saveBank();
+  document.getElementById('generateResult').style.display = 'none';
+  document.getElementById('sourceText').value = '';
+  toast(`已存入 ${newQs.length} 道题`, 'ok');
+}
+
+// ========== Bank persistence ==========
+function saveBank() {
+  localStorage.setItem('sa_bank', JSON.stringify(bank));
+}
+
+// ========== Practice ==========
+function refreshPractice() {
+  updateStats();
+  buildQueue();
+  // Update practice subject label
+  const lbl = document.getElementById('practiceSubjLabel');
+  if (lbl) {
+    const s = subjects.find(s => s.id === currentSubjectId);
+    lbl.textContent = currentSubjectId ? `📚 ${s ? s.name : ''}` : '📋 全部科目';
+  }
+  if (currentQueue.length === 0) {
+    document.getElementById('practiceCard').style.display = '';
+    document.getElementById('practiceArea').style.display = 'none';
+  } else {
+    document.getElementById('practiceCard').style.display = 'none';
+    document.getElementById('practiceArea').style.display = '';
+    currentIdx = 0;
+    renderCard();
+  }
+}
+
+function updateStats() {
+  const qs = currentSubjectId ? bank.filter(q => q.subjectId === currentSubjectId) : bank;
+  document.getElementById('statNew').textContent = qs.filter(q => q.status === 'new').length;
+  document.getElementById('statForgot').textContent = qs.filter(q => q.status === 'forgot').length;
+  document.getElementById('statMastered').textContent = qs.filter(q => q.status === 'correct').length;
+}
+
+function buildQueue() {
+  const pool = currentSubjectId ? bank.filter(q => q.subjectId === currentSubjectId) : bank;
+  if (currentMode === 'new') currentQueue = pool.filter(q => q.status === 'new');
+  else if (currentMode === 'forgot') {
+    currentQueue = pool.filter(q => q.status === 'forgot');
+    // Apply difficulty filter
+    if (currentDiffFilter !== 'all') {
+      currentQueue = currentQueue.filter(q => q.difficulty === currentDiffFilter);
+    }
+  }
+  // 打乱
+  for (let i = currentQueue.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentQueue[i], currentQueue[j]] = [currentQueue[j], currentQueue[i]];
+  }
+}
+
+function setDifficulty(diff) {
+  currentDifficulty = diff;
+  document.querySelectorAll('#diffSelector .diff-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#diffSelector [data-diff="${diff}"]`).classList.add('active');
+}
+
+function setDiffFilter(fdiff) {
+  currentDiffFilter = fdiff;
+  document.querySelectorAll('#diffFilter .diff-btn').forEach(b => {
+    b.classList.remove('active');
+    if (b.dataset.fdiff === fdiff) b.classList.add('active');
+  });
+  buildQueue();
+  currentIdx = 0;
+  cardFlipped = false;
+  renderCard();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('#panelPractice .mode-btns .btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+  // Show/hide difficulty filter
+  document.getElementById('diffFilter').style.display = mode === 'forgot' ? 'flex' : 'none';
+  if (mode === 'new') currentDiffFilter = 'all'; // reset on new mode
+  buildQueue();
+  currentIdx = 0;
+  cardFlipped = false;
+  renderCard();
+}
+
+function renderCard() {
+  if (currentQueue.length === 0) {
+    document.getElementById('practiceCard').style.display = '';
+    document.getElementById('practiceArea').style.display = 'none';
+    const emptyP = document.getElementById('practiceCard').querySelector('.empty p');
+    if (currentMode === 'new') {
+      emptyP.innerHTML = '新题刷完啦 🎉<br><br><a href="#" onclick="switchToGenerate()" style="color:var(--accent);font-weight:600">去生成更多新题 →</a>';
+    } else {
+      if (currentDiffFilter !== 'all') {
+        emptyP.innerHTML = '该难度暂无记忆不牢的题 🎉<br><br><a href="#" onclick="setDiffFilter(\'all\')" style="color:var(--accent);font-weight:600">← 查看全部难度</a>';
+      } else {
+        emptyP.textContent = '记忆不牢为空，继续保持 🎉';
+      }
+    }
+    return;
+  }
+  document.getElementById('practiceCard').style.display = 'none';
+  document.getElementById('practiceArea').style.display = '';
+  const card = document.getElementById('flipCard');
+  card.classList.remove('show-answer');
+  cardFlipped = false;
+  document.getElementById('evalRow').style.display = 'none';
+  document.getElementById('hintRow').style.display = 'flex';
+  document.getElementById('hintBox').style.display = 'none';
+
+  const q = currentQueue[currentIdx];
+  const dLabels = { easy: '简单', medium: '中等', hard: '困难' };
+  const dClasses = { easy: 'diff-easy', medium: 'diff-medium', hard: 'diff-hard' };
+  const dTag = q.difficulty && dLabels[q.difficulty]
+    ? `<span class="diff-tag ${dClasses[q.difficulty] || ''}">${dLabels[q.difficulty]}</span>` : '';
+  document.getElementById('cardIdx').innerHTML = `${currentIdx + 1} / ${currentQueue.length}`;
+  document.getElementById('cardQuestion').innerHTML = dTag + ' ' + q.q;
+  document.getElementById('cardAnswer').textContent = q.a;
+}
+
+function flipCard() {
+  if (currentQueue.length === 0) return;
+  const card = document.getElementById('flipCard');
+  cardFlipped = !cardFlipped;
+  card.classList.toggle('show-answer', cardFlipped);
+  document.getElementById('evalRow').style.display = cardFlipped ? 'flex' : 'none';
+}
+
+function extractHints(answer) {
+  // 本地提取关键词，不调用 API
+  const hints = [];
+  // 1. 提取引号内的术语
+  const quoted = answer.match(/[""'「」『』]([^"'「」『』]{2,12})[""'「」『』]/g);
+  if (quoted) quoted.forEach(q => hints.push(q.replace(/[""'「」『』]/g, '')));
+  // 2. 提取 "XX是指" "XX即" "XX就是" 模式
+  const defPat = /([一-龥]{2,8})(是指|即|指的是|就是|定义为)/g;
+  let m;
+  while ((m = defPat.exec(answer)) !== null) hints.push(m[1]);
+  // 3. 提取顿号、逗号分隔的关键词组
+  const listPat = /(?:^|[，。；])([一-龥]{2,6}(?:、[一-龥]{2,6})+)/g;
+  while ((m = listPat.exec(answer)) !== null) {
+    m[1].split('、').slice(0, 4).forEach(w => { if (w.length >= 2) hints.push(w); });
+  }
+  // 去重、去短、取前6个
+  const seen = new Set();
+  return hints.filter(h => h.length >= 2 && !seen.has(h) && seen.add(h)).slice(0, 6);
+}
+
+function showHint() {
+  if (currentQueue.length === 0) return;
+  const q = currentQueue[currentIdx];
+  const keywords = extractHints(q.a);
+  const hintText = keywords.length > 0
+    ? keywords.map((k, i) => `${i + 1}. ${k}`).join('　')
+    : '（无可用关键词）';
+  document.getElementById('hintContent').textContent = hintText;
+  document.getElementById('hintBox').style.display = 'block';
+  document.getElementById('hintRow').style.display = 'none';
+  // 自动标记为记忆不牢
+  if (keywords.length > 0) selfEval('forgot');
+}
+
+function selfEval(level) {
+  const q = currentQueue[currentIdx];
+  const orig = bank.find(b => b.id === q.id);
+  if (orig) orig.status = level;
+  saveBank();
+  updateStats();
+  // 记忆不牢中标记为正确→从记忆不牢移除
+  if (currentMode === 'forgot' && level === 'correct') {
+    buildQueue();
+    if (currentQueue.length === 0) {
+      renderCard(); // 显示空状态
+      return;
+    }
+    if (currentIdx >= currentQueue.length) currentIdx = 0;
+    renderCard();
+    return;
+  }
+  setTimeout(() => { nextCard(); }, 200);
+}
+
+function switchToGenerate() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-tab="generate"]').classList.add('active');
+  document.getElementById('panelGenerate').style.display = '';
+  document.getElementById('panelPractice').style.display = 'none';
+}
+
+function prevCard() {
+  if (currentQueue.length === 0) return;
+  currentIdx = (currentIdx - 1 + currentQueue.length) % currentQueue.length;
+  cardFlipped = false;
+  renderCard();
+}
+
+function nextCard() {
+  if (currentQueue.length === 0) return;
+  currentIdx = (currentIdx + 1) % currentQueue.length;
+  cardFlipped = false;
+  renderCard();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (document.getElementById('panelPractice').style.display === 'none') return;
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+  if (!cardFlipped) return;
+  if (e.key === '1') selfEval('forgot');
+  if (e.key === '2') selfEval('partial');
+  if (e.key === '3') selfEval('correct');
+  if (e.key === 'ArrowLeft') prevCard();
+  if (e.key === 'ArrowRight') nextCard();
+});
+
+// ========== Init ==========
+updateStats();
+refreshPractice();
+</script>
+</body>
+</html>
