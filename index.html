@@ -68,9 +68,16 @@ textarea::placeholder{color:var(--t3)}
 .q-item-actions{display:flex;gap:4px;flex-shrink:0}
 .q-item-actions button{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--t3)}
 .q-item-actions button:hover{border-color:var(--red);color:var(--red)}
-.q-item input[type=text],.q-item textarea{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none;margin-top:4px}
-.q-item textarea{min-height:60px}
+.q-item .q-text{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;font-family:inherit;outline:none;resize:vertical;background:#fafbfc;line-height:1.7;margin-bottom:6px;min-height:2.5em}
+.q-item .q-text:focus{border-color:var(--accent);background:#fff}
+.q-sep{height:1px;background:var(--border);margin:6px 0}
+.q-item .q-text{display:block !important} /* 问题 textarea 始终可见 */
+.q-item textarea:not(.q-text){width:100%;min-height:60px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none;margin-top:4px;display:none;resize:vertical}
+.q-item textarea:not(.q-text).show{display:block}
 .q-item input:focus,.q-item textarea:focus{border-color:var(--accent)}
+.ans-toggle{font-size:12px;color:var(--accent);cursor:pointer;font-weight:600;margin-top:4px;display:inline-block;user-select:none}
+.ans-toggle:hover{text-decoration:underline}
+.ans-preview{font-size:12px;color:var(--t3);margin-top:4px;line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 
 /* Practice card */
 .practice-card{background:var(--card);border-radius:var(--r);padding:28px 24px;min-height:280px;box-shadow:var(--shadow);cursor:pointer;user-select:none;position:relative;transition:all .3s}
@@ -492,12 +499,16 @@ ${text.slice(0, 30000)}`;
     listEl.innerHTML = qaList.map((item, i) => `
       <div class="q-item" id="genItem${i}">
         <div class="q-item-header">
-          <span class="q-item-q">${i + 1}.${diffClass ? `<span class="diff-tag ${diffClass}">${diffLabel}</span>` : ''} <input type="text" value="${escHtml(item.q)}" id="genQ${i}" style="width:100%"></span>
+          <span class="q-item-q" style="flex:1">${i + 1}.${diffClass ? `<span class="diff-tag ${diffClass}">${diffLabel}</span>` : ''}</span>
           <div class="q-item-actions">
             <button onclick="document.getElementById('genItem${i}').remove()" title="删除">✕</button>
           </div>
         </div>
-        <textarea id="genA${i}" placeholder="参考答案">${escHtml(item.a)}</textarea>
+        <textarea class="q-text" id="genQ${i}" rows="2" placeholder="题目">${escHtml(item.q)}</textarea>
+        <div class="q-sep"></div>
+        <div class="ans-preview" id="genPreview${i}">📝 ${escHtml(item.a).slice(0, 60)}${item.a.length > 60 ? '…' : ''}</div>
+        <span class="ans-toggle" id="genToggle${i}" onclick="toggleAnswer(${i})">▸ 展开答案</span>
+        <textarea id="genA${i}" placeholder="参考答案" rows="3">${escHtml(item.a)}</textarea>
       </div>
     `).join('');
     toast(`生成了 ${qaList.length} 道题`, 'ok');
@@ -512,13 +523,35 @@ ${text.slice(0, 30000)}`;
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
+}
+
+function toggleAnswer(i) {
+  const ta = document.getElementById('genA' + i);
+  const preview = document.getElementById('genPreview' + i);
+  const toggle = document.getElementById('genToggle' + i);
+  if (!ta || !toggle) return;
+  const isOpen = ta.classList.contains('show');
+  if (isOpen) {
+    ta.classList.remove('show');
+    preview.style.display = '';
+    toggle.textContent = '▸ 展开答案';
+  } else {
+    ta.classList.add('show');
+    preview.style.display = 'none';
+    toggle.textContent = '▾ 收起答案';
+  }
+}
+
 function saveToBank() {
   const items = document.querySelectorAll('#qList .q-item');
   const newQs = [];
   const sid = currentSubjectId || (subjects.length > 0 ? subjects[0].id : 'subj_default');
   items.forEach((item, i) => {
-    const qEl = item.querySelector('input[type=text]');
-    const aEl = item.querySelector('textarea');
+    const qEl = item.querySelector('.q-text');
+    const aEl = item.querySelector('textarea:not(.q-text)');
     if (!qEl || !aEl) return;
     const q = qEl.value.trim();
     const a = aEl.value.trim();
